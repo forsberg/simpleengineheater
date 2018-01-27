@@ -19,12 +19,20 @@ def start_engineheater():
     parser.add_argument("--extra-time", default=30, type=int)
     parser.add_argument("--homeassistant-url", default="http://localhost:8123")
     parser.add_argument("--verbose", action="store_true")
+    parser.add_argument("--toggle-switch", help="Switch in Home Assistant that tells if we should do anything at all")
 
     args = parser.parse_args()
 
     if args.verbose:
         log.root.setLevel(DEBUG)
 
+    if args.toggle_switch:
+        toggle = requests.get("%s/api/states/%s" % (args.homeassistant_url, args.toggle_switch)).json()["state"]
+        log.debug("toggle switch is in state %s" % toggle)
+        if toggle == "off":
+            log.debug("We are disabled by switch in UI. Bye!")
+            return
+                              
 
     current_temperature = float(requests.get("%s/api/states/%s" % (args.homeassistant_url, args.sensor)).json()["attributes"]["V_TEMP"])
     log.debug("Current temperature: %f" % current_temperature)
